@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Armazenador de Links do Drive</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #4285F4, #34A853);
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            border-color: #4285F4;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+        }
+        
+        button {
+            background: #4285F4;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #3367D6;
+        }
+        
+        .links-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .link-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 4px solid #4285F4;
+        }
+        
+        .link-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .link-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .link-url {
+            color: #4285F4;
+            word-break: break-all;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .link-description {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+        
+        .link-actions {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .btn-visualizar {
+            background: #34A853;
+        }
+        
+        .btn-visualizar:hover {
+            background: #2E8B47;
+        }
+        
+        .btn-excluir {
+            background: #EA4335;
+        }
+        
+        .btn-excluir:hover {
+            background: #D33426;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #777;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+        
+        .search-container {
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .links-container {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Armazenador de Links do Drive</h1>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="card">
+            <h2>Adicionar Novo Link</h2>
+            <form id="linkForm">
+                <div class="form-group">
+                    <label for="linkTitle">Título do Arquivo</label>
+                    <input type="text" id="linkTitle" placeholder="Ex: Apresentação de Vendas" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="linkUrl">URL do Google Drive</label>
+                    <input type="url" id="linkUrl" placeholder="https://drive.google.com/file/d/..." required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="linkDescription">Descrição (opcional)</label>
+                    <textarea id="linkDescription" rows="3" placeholder="Descreva brevemente o conteúdo do arquivo..."></textarea>
+                </div>
+                
+                <button type="submit">Salvar Link</button>
+            </form>
+        </div>
+        
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Buscar por título ou descrição...">
+        </div>
+        
+        <div id="linksList" class="links-container">
+            <!-- Os links serão inseridos aqui dinamicamente -->
+        </div>
+    </div>
+
+    <script>
+        // Elementos DOM
+        const linkForm = document.getElementById('linkForm');
+        const linksList = document.getElementById('linksList');
+        const searchInput = document.getElementById('searchInput');
+        
+        // Carregar links ao iniciar
+        document.addEventListener('DOMContentLoaded', loadLinks);
+        
+        // Adicionar novo link
+        linkForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('linkTitle').value;
+            const url = document.getElementById('linkUrl').value;
+            const description = document.getElementById('linkDescription').value;
+            
+            // Validação básica de URL do Drive
+            if (!isValidDriveUrl(url)) {
+                alert('Por favor, insira um link válido do Google Drive.');
+                return;
+            }
+            
+            addLink(title, url, description);
+            linkForm.reset();
+        });
+        
+        // Buscar links
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const links = getLinksFromStorage();
+            
+            if (searchTerm === '') {
+                displayLinks(links);
+                return;
+            }
+            
+            const filteredLinks = links.filter(link => 
+                link.title.toLowerCase().includes(searchTerm) || 
+                link.description.toLowerCase().includes(searchTerm)
+            );
+            
+            displayLinks(filteredLinks);
+        });
+        
+        // Funções
+        function isValidDriveUrl(url) {
+            // Verifica se é uma URL válida do Google Drive
+            return url.includes('drive.google.com') && 
+                  (url.includes('/file/d/') || url.includes('/drive/folders/'));
+        }
+        
+        function addLink(title, url, description) {
+            const links = getLinksFromStorage();
+            const newLink = {
+                id: Date.now().toString(),
+                title,
+                url,
+                description,
+                dateAdded: new Date().toLocaleDateString('pt-BR')
+            };
+            
+            links.push(newLink);
+            saveLinksToStorage(links);
+            displayLinks(links);
+        }
+        
+        function deleteLink(id) {
+            if (confirm('Tem certeza que deseja excluir este link?')) {
+                const links = getLinksFromStorage();
+                const filteredLinks = links.filter(link => link.id !== id);
+                saveLinksToStorage(filteredLinks);
+                displayLinks(filteredLinks);
+            }
+        }
+        
+        function displayLinks(links) {
+            if (links.length === 0) {
+                linksList.innerHTML = `
+                    <div class="empty-state">
+                        <i>📁</i>
+                        <h3>Nenhum link salvo ainda</h3>
+                        <p>Adicione seu primeiro link do Google Drive usando o formulário acima.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            linksList.innerHTML = links.map(link => `
+                <div class="link-card">
+                    <h3 class="link-title">${link.title}</h3>
+                    <p class="link-url">${link.url}</p>
+                    <p class="link-description">${link.description || 'Sem descrição'}</p>
+                    <div class="link-meta">
+                        <small>Adicionado em: ${link.dateAdded}</small>
+                    </div>
+                    <div class="link-actions">
+                        <a href="${link.url}" target="_blank" class="btn-visualizar" style="text-decoration: none; color: white; padding: 8px 15px; border-radius: 4px;">Abrir</a>
+                        <button class="btn-excluir" onclick="deleteLink('${link.id}')">Excluir</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function getLinksFromStorage() {
+            const links = localStorage.getItem('driveLinks');
+            return links ? JSON.parse(links) : [];
+        }
+        
+        function saveLinksToStorage(links) {
+            localStorage.setItem('driveLinks', JSON.stringify(links));
+        }
+        
+        function loadLinks() {
+            const links = getLinksFromStorage();
+            displayLinks(links);
+        }
+    </script>
+</body>
+</html>
