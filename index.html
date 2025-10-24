@@ -106,6 +106,10 @@
             padding: 20px;
             transition: transform 0.2s, box-shadow 0.2s;
             border-left: 4px solid #4285F4;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
         
         .link-card:hover {
@@ -113,44 +117,127 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
         
-        .link-title {
-            font-size: 1.2rem;
+        .link-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
             margin-bottom: 10px;
-            color: #333;
         }
         
-        .link-url {
-            color: #4285F4;
-            word-break: break-all;
-            margin-bottom: 15px;
-            font-size: 0.9rem;
+        .link-title {
+            font-size: 1.2rem;
+            color: #333;
+            flex: 1;
+            margin-right: 10px;
+            word-break: break-word;
         }
         
         .link-description {
             color: #666;
             margin-bottom: 15px;
             font-size: 0.95rem;
+            line-height: 1.5;
+            flex: 1;
         }
         
         .link-actions {
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
         }
         
         .btn-visualizar {
             background: #34A853;
+            text-decoration: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: background 0.3s;
         }
         
         .btn-visualizar:hover {
             background: #2E8B47;
         }
         
-        .btn-excluir {
-            background: #EA4335;
+        .menu-container {
+            position: relative;
         }
         
-        .btn-excluir:hover {
-            background: #D33426;
+        .menu-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+        }
+        
+        .menu-button:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        .menu-dot {
+            width: 4px;
+            height: 4px;
+            background-color: #666;
+            border-radius: 50%;
+            margin: 1px 0;
+        }
+        
+        .menu-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+            min-width: 150px;
+            z-index: 10;
+            display: none;
+            overflow: hidden;
+        }
+        
+        .menu-dropdown.show {
+            display: block;
+        }
+        
+        .menu-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+        
+        .menu-item:hover {
+            background: #f5f5f5;
+        }
+        
+        .menu-item.visualizar {
+            color: #4285F4;
+        }
+        
+        .menu-item.editar {
+            color: #FBBC05;
+        }
+        
+        .menu-item.excluir {
+            color: #EA4335;
         }
         
         .empty-state {
@@ -169,6 +256,37 @@
             margin-bottom: 20px;
         }
         
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-cancelar {
+            background: #6c757d;
+        }
+        
+        .btn-cancelar:hover {
+            background: #5a6268;
+        }
+        
+        .link-meta {
+            margin-bottom: 15px;
+            font-size: 0.8rem;
+            color: #999;
+        }
+        
+        .link-url-preview {
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 8px 10px;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #666;
+            word-break: break-all;
+            display: none;
+        }
+        
         @media (max-width: 768px) {
             .links-container {
                 grid-template-columns: 1fr;
@@ -177,6 +295,19 @@
             h1 {
                 font-size: 2rem;
             }
+            
+            .link-header {
+                flex-direction: column;
+            }
+            
+            .link-title {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            
+            .menu-container {
+                align-self: flex-end;
+            }
         }
     </style>
 </head>
@@ -184,13 +315,16 @@
     <header>
         <div class="container">
             <h1>Armazenador de Links do Drive</h1>
+            <p class="subtitle">Organize e acesse facilmente seus arquivos do Google Drive</p>
         </div>
     </header>
     
     <div class="container">
         <div class="card">
-            <h2>Adicionar Novo Link</h2>
+            <h2 id="formTitle">Adicionar Novo Link</h2>
             <form id="linkForm">
+                <input type="hidden" id="linkId" value="">
+                
                 <div class="form-group">
                     <label for="linkTitle">Título do Arquivo</label>
                     <input type="text" id="linkTitle" placeholder="Ex: Apresentação de Vendas" required>
@@ -206,7 +340,10 @@
                     <textarea id="linkDescription" rows="3" placeholder="Descreva brevemente o conteúdo do arquivo..."></textarea>
                 </div>
                 
-                <button type="submit">Salvar Link</button>
+                <div class="form-buttons">
+                    <button type="submit" id="submitButton">Salvar Link</button>
+                    <button type="button" id="cancelButton" class="btn-cancelar" style="display: none;">Cancelar</button>
+                </div>
             </form>
         </div>
         
@@ -224,14 +361,30 @@
         const linkForm = document.getElementById('linkForm');
         const linksList = document.getElementById('linksList');
         const searchInput = document.getElementById('searchInput');
+        const formTitle = document.getElementById('formTitle');
+        const submitButton = document.getElementById('submitButton');
+        const cancelButton = document.getElementById('cancelButton');
+        const linkIdInput = document.getElementById('linkId');
+        
+        // Variável para controlar se estamos editando
+        let isEditing = false;
+        let activeMenu = null;
         
         // Carregar links ao iniciar
         document.addEventListener('DOMContentLoaded', loadLinks);
         
-        // Adicionar novo link
+        // Fechar menus ao clicar fora deles
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.menu-container')) {
+                closeAllMenus();
+            }
+        });
+        
+        // Adicionar novo link ou editar existente
         linkForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
+            const id = linkIdInput.value;
             const title = document.getElementById('linkTitle').value;
             const url = document.getElementById('linkUrl').value;
             const description = document.getElementById('linkDescription').value;
@@ -242,8 +395,18 @@
                 return;
             }
             
-            addLink(title, url, description);
-            linkForm.reset();
+            if (isEditing) {
+                updateLink(id, title, url, description);
+            } else {
+                addLink(title, url, description);
+            }
+            
+            resetForm();
+        });
+        
+        // Cancelar edição
+        cancelButton.addEventListener('click', function() {
+            resetForm();
         });
         
         // Buscar links
@@ -278,12 +441,50 @@
                 title,
                 url,
                 description,
-                dateAdded: new Date().toLocaleDateString('pt-BR')
+                dateAdded: new Date().toLocaleDateString('pt-BR'),
+                dateModified: new Date().toLocaleDateString('pt-BR')
             };
             
             links.push(newLink);
             saveLinksToStorage(links);
             displayLinks(links);
+        }
+        
+        function updateLink(id, title, url, description) {
+            const links = getLinksFromStorage();
+            const linkIndex = links.findIndex(link => link.id === id);
+            
+            if (linkIndex !== -1) {
+                links[linkIndex].title = title;
+                links[linkIndex].url = url;
+                links[linkIndex].description = description;
+                links[linkIndex].dateModified = new Date().toLocaleDateString('pt-BR');
+                
+                saveLinksToStorage(links);
+                displayLinks(links);
+            }
+        }
+        
+        function editLink(id) {
+            const links = getLinksFromStorage();
+            const link = links.find(link => link.id === id);
+            
+            if (link) {
+                // Preencher o formulário com os dados do link
+                document.getElementById('linkTitle').value = link.title;
+                document.getElementById('linkUrl').value = link.url;
+                document.getElementById('linkDescription').value = link.description;
+                linkIdInput.value = link.id;
+                
+                // Alterar o formulário para modo de edição
+                formTitle.textContent = 'Editar Link';
+                submitButton.textContent = 'Atualizar Link';
+                cancelButton.style.display = 'inline-block';
+                isEditing = true;
+                
+                // Rolar para o formulário
+                document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+            }
         }
         
         function deleteLink(id) {
@@ -292,7 +493,58 @@
                 const filteredLinks = links.filter(link => link.id !== id);
                 saveLinksToStorage(filteredLinks);
                 displayLinks(filteredLinks);
+                
+                // Se estivermos editando o link que foi excluído, resetar o formulário
+                if (isEditing && linkIdInput.value === id) {
+                    resetForm();
+                }
             }
+        }
+        
+        function toggleMenu(menuId) {
+            const menu = document.getElementById(menuId);
+            
+            if (activeMenu === menuId) {
+                menu.classList.remove('show');
+                activeMenu = null;
+            } else {
+                closeAllMenus();
+                menu.classList.add('show');
+                activeMenu = menuId;
+            }
+        }
+        
+        function closeAllMenus() {
+            document.querySelectorAll('.menu-dropdown').forEach(menu => {
+                menu.classList.remove('show');
+            });
+            activeMenu = null;
+        }
+        
+        function showLinkUrl(linkId) {
+            const links = getLinksFromStorage();
+            const link = links.find(link => link.id === linkId);
+            
+            if (link) {
+                // Mostrar o URL em um preview
+                const urlPreview = document.getElementById(`url-preview-${linkId}`);
+                if (urlPreview) {
+                    urlPreview.textContent = link.url;
+                    urlPreview.style.display = 'block';
+                    
+                    // Fechar o menu
+                    closeAllMenus();
+                }
+            }
+        }
+        
+        function resetForm() {
+            linkForm.reset();
+            linkIdInput.value = '';
+            formTitle.textContent = 'Adicionar Novo Link';
+            submitButton.textContent = 'Salvar Link';
+            cancelButton.style.display = 'none';
+            isEditing = false;
         }
         
         function displayLinks(links) {
@@ -309,15 +561,39 @@
             
             linksList.innerHTML = links.map(link => `
                 <div class="link-card">
-                    <h3 class="link-title">${link.title}</h3>
-                    <p class="link-url">${link.url}</p>
+                    <div class="link-header">
+                        <h3 class="link-title">${link.title}</h3>
+                        <div class="menu-container">
+                            <button class="menu-button" onclick="toggleMenu('menu-${link.id}')">
+                                <div class="menu-dot"></div>
+                                <div class="menu-dot"></div>
+                                <div class="menu-dot"></div>
+                            </button>
+                            <div id="menu-${link.id}" class="menu-dropdown">
+                                <div class="menu-item visualizar" onclick="showLinkUrl('${link.id}')">
+                                    <span>🔗</span> Ver Link
+                                </div>
+                                <div class="menu-item editar" onclick="editLink('${link.id}')">
+                                    <span>✏️</span> Editar
+                                </div>
+                                <div class="menu-item excluir" onclick="deleteLink('${link.id}')">
+                                    <span>🗑️</span> Excluir
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <p class="link-description">${link.description || 'Sem descrição'}</p>
+                    
+                    <div id="url-preview-${link.id}" class="link-url-preview"></div>
+                    
                     <div class="link-meta">
                         <small>Adicionado em: ${link.dateAdded}</small>
+                        ${link.dateModified !== link.dateAdded ? `<br><small>Modificado em: ${link.dateModified}</small>` : ''}
                     </div>
+                    
                     <div class="link-actions">
-                        <a href="${link.url}" target="_blank" class="btn-visualizar" style="text-decoration: none; color: white; padding: 8px 15px; border-radius: 4px;">Abrir</a>
-                        <button class="btn-excluir" onclick="deleteLink('${link.id}')">Excluir</button>
+                        <a href="${link.url}" target="_blank" class="btn-visualizar">Abrir no Drive</a>
                     </div>
                 </div>
             `).join('');
